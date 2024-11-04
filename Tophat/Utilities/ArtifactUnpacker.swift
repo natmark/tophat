@@ -25,6 +25,7 @@ final class ArtifactUnpacker {
 
 		switch fileFormat {
 			case .zip:
+                // TODO: hoge.app が hoge.zip に圧縮されている場合に hoge.app ディレクトリに hoge.app を展開した内容を入れてしまい、hoge.app/hoge.app になってしまうことで上手く動かない問題がある
 				let extractedURL = try extractArtifact(at: artifactURL)
 				return try unpack(artifactURL: extractedURL)
 
@@ -56,12 +57,27 @@ final class ArtifactUnpacker {
 	}
 
 	private func extractArtifact(at url: URL) throws -> URL {
-		let destination = url.deletingLastPathComponent().appending(path: url.fileName)
+        if url.fileName.contains(".app") {
+//            // TODO: 一旦雑実装 ( `.app.zip` のような拡張子の場合にディレクトリ名に含めない用にしたい)
+//            let destination = url.deletingLastPathComponent() // zipが存在する直下に展開する
+//            try FileManager.default.unzipItem(at: url, to: destination)
+//            try? FileManager.default.removeItem(at: url)
+//
+//            return destination.appending(component: url.fileName)
+            let destination = url.deletingLastPathComponent().appending(path: url.fileName)
 
-		try FileManager.default.unzipItem(at: url, to: destination)
-		try? FileManager.default.removeItem(at: url)
+            try FileManager.default.unzipItem(at: url, to: destination)
+            try? FileManager.default.removeItem(at: url)
 
-		return destination
+            return destination
+        } else {
+            let destination = url.deletingLastPathComponent().appending(path: url.fileName)
+
+            try FileManager.default.unzipItem(at: url, to: destination)
+            try? FileManager.default.removeItem(at: url)
+
+            return destination
+        }
 	}
 }
 
